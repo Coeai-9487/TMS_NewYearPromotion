@@ -109,6 +109,27 @@
     }
     .cta:disabled{ opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
 
+    /* 分解輸入風格，符合頁面按鈕/卡片風格 */
+    .decompose-input{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+      border:1px solid var(--border);
+      color:var(--muted);
+      padding:6px 8px;
+      border-radius:8px;
+      text-align:center;
+      font-weight:700;
+    }
+    .decompose-have{ color:var(--muted); font-size:13px; }
+
+    /* Modal */
+    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); z-index:2000; }
+    .modal[hidden]{ display:none; }
+    .modal-content{ background:var(--card); border:1px solid var(--border); padding:18px; border-radius:12px; width:320px; max-width:90%; }
+    .modal-options{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+    .modal-option{ padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.02); cursor:pointer; color:var(--muted); }
+    .modal-option.selected{ background:linear-gradient(90deg,#ff7a7a,#ffd06e); color:#1b0a0a; font-weight:800; border-color:rgba(255,255,255,0.06); }
+    .modal-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+
     /* Card and grid */
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
@@ -386,7 +407,7 @@
             <div class="rewards">
               <div class="reward">消耗 10 精華 → 可選：兔、龍、蛇</div>
               <div class="reward">消耗 50 精華 → 可選：鼠、牛、虎</div>
-              <div class="reward">消耗 200 精華 → 可選：雞、兔、豬</div>
+              <div class="reward">消耗 200 精華 → 可選：雞、狗、豬</div>
               <div class="reward">消耗 1500 精華 → 可選：馬、羊、猴</div>
             </div>
             <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
@@ -403,6 +424,19 @@
         </div>
       </div>
     </section>
+
+    <!-- Essence exchange modal -->
+    <div id="essenceModal" class="modal" hidden>
+      <div class="modal-content">
+        <div style="font-weight:800; color:#ffdca8;">精華兌換</div>
+        <div id="essenceModalDesc" style="color:var(--muted); margin-top:6px; font-size:13px;"></div>
+        <div class="modal-options" id="essenceModalOptions"></div>
+        <div class="modal-actions">
+          <button class="cta" id="essenceModalCancel" style="background:linear-gradient(90deg,#6b7280,#94a3b8); color:#fff;">取消</button>
+          <button class="cta" id="essenceModalConfirm">確認兌換</button>
+        </div>
+      </div>
+    </div>
 
     <footer>祝你新年平安喜樂，心想事成！</footer>
   </div>
@@ -554,6 +588,8 @@
     // 顯示精華
     const essenceCountEl = document.getElementById('essenceCount');
     if (essenceCountEl) essenceCountEl.textContent = `${essenceCount}`;
+    // 若分解面板已存在，更新其持有數顯示
+    updateDecomposeHave();
 
     // Box definitions and rewards
     const boxDefinitions = {
@@ -597,6 +633,7 @@
       if (selected) selected.querySelector('.note').textContent = `${counts[name]}個`;
       updateOwnedDistinctDisplay();
       saveState();
+      updateDecomposeHave();
     }
     function decreaseZodiacCount(name){
       if (!counts[name] || counts[name] <= 0) return false;
@@ -605,6 +642,7 @@
       if (selected) selected.querySelector('.note').textContent = `${counts[name]}個`;
       updateOwnedDistinctDisplay();
       saveState();
+      updateDecomposeHave();
       return true;
     }
     function pushHistory(entry){
@@ -674,6 +712,18 @@
       ownedDistinctEl.textContent = `目前持有${distinct}種生肖`;
     }
 
+    // 同步分解面板上的持有數（如果存在 .decompose-have 元素）
+    function updateDecomposeHave(){
+      try{
+        const els = document.querySelectorAll('.decompose-have');
+        els.forEach(el => {
+          const name = el.dataset.name;
+          if (!name) return;
+          el.textContent = `${counts[name] || 0}個`;
+        });
+      }catch(e){ /* ignore */ }
+    }
+
     // Prevent rapid double clicks
     function withTemporaryDisable(fn, ms = 300){
       return function(...args){
@@ -735,8 +785,8 @@
     btn10.addEventListener('click', withTemporaryDisable(tenDraw, 50));
     btn100.addEventListener('click', withTemporaryDisable(hundredDraw, 50));
 
-    // --- 分解功能：在紀錄頁面分解生肖獲得精華 ---
-    (function createDecomposeControls(){
+    // --- 分解功能：改為列出所有生肖，使用者可直接輸入每種要分解的數量，然後一次提交 ---
+    (function createDecomposeControlsGrid(){
       const parent = document.getElementById('exchangeCountsPanel');
       if (!parent) return;
       const container = document.createElement('div');
@@ -746,104 +796,203 @@
 
       const title = document.createElement('div');
       title.style.fontWeight = '700';
-      title.textContent = '分解物品以獲得氣息的精華';
+      title.textContent = '分解物品以獲得氣息的精華（直接輸入數量）';
       container.appendChild(title);
 
-      const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.gap = '8px';
-      row.style.marginTop = '8px';
+      const grid = document.createElement('div');
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      grid.style.gap = '8px';
+      grid.style.marginTop = '8px';
 
-      const select = document.createElement('select');
-      select.id = 'decomposeSelect';
-      Array.from(zodiacItems).forEach(item => {
-        const name = item.querySelector('.name').textContent;
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        select.appendChild(opt);
+      // 每個生肖一列含名稱、持有數、輸入欄（依照指定順序顯示）
+      const decomposeOrder = ['馬','羊','猴','雞','狗','豬','鼠','牛','虎','兔','龍','蛇'];
+      decomposeOrder.forEach(name => {
+        const cell = document.createElement('div');
+        cell.style.display = 'flex';
+        cell.style.alignItems = 'center';
+        cell.style.gap = '8px';
+        cell.style.padding = '6px';
+        cell.style.borderRadius = '8px';
+
+        const label = document.createElement('div');
+        label.textContent = name;
+        label.style.fontWeight = '700';
+        label.style.minWidth = '48px';
+
+        const have = document.createElement('div');
+        have.textContent = `${counts[name] || 0}個`;
+        have.className = 'decompose-have';
+        have.dataset.name = name;
+        have.style.color = 'var(--muted)';
+        have.style.minWidth = '64px';
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.value = '0';
+        input.dataset.name = name;
+        input.className = 'decompose-input';
+        input.style.width = '72px';
+        input.style.padding = '6px';
+        input.style.borderRadius = '6px';
+
+        cell.appendChild(label);
+        cell.appendChild(have);
+        cell.appendChild(input);
+        grid.appendChild(cell);
       });
 
-      const qty = document.createElement('input');
-      qty.type = 'number';
-      qty.min = '1';
-      qty.value = '1';
-      qty.id = 'decomposeQty';
-      qty.style.width = '72px';
-      qty.style.padding = '6px';
-      qty.style.borderRadius = '8px';
+      container.appendChild(grid);
 
-      const btn = document.createElement('button');
-      btn.className = 'cta';
-      btn.id = 'decomposeBtn';
-      btn.textContent = '分解';
+      const actionRow = document.createElement('div');
+      actionRow.style.display = 'flex';
+      actionRow.style.gap = '8px';
+      actionRow.style.marginTop = '10px';
 
-      row.appendChild(select);
-      row.appendChild(qty);
-      row.appendChild(btn);
-      container.appendChild(row);
+      const decomposeAllBtn = document.createElement('button');
+      decomposeAllBtn.className = 'cta';
+      decomposeAllBtn.textContent = '分解所填數量';
+
+      const clearInputsBtn = document.createElement('button');
+      clearInputsBtn.className = 'cta';
+      clearInputsBtn.style.background = 'linear-gradient(90deg,#6b7280,#94a3b8)';
+      clearInputsBtn.style.color = '#fff';
+      clearInputsBtn.textContent = '清除輸入';
+
+      actionRow.appendChild(decomposeAllBtn);
+      actionRow.appendChild(clearInputsBtn);
+      container.appendChild(actionRow);
 
       const info = document.createElement('div');
       info.id = 'decomposeInfo';
       info.style.marginTop = '8px';
       info.style.color = 'var(--muted)';
+      info.style.whiteSpace = 'pre-wrap';
       container.appendChild(info);
 
       parent.appendChild(container);
 
-      btn.addEventListener('click', () => {
-        const name = select.value;
-        const n = parseInt(qty.value, 10) || 0;
-        if (n <= 0) { info.textContent = '請輸入大於 0 的數量。'; return; }
-        if (!counts[name] || counts[name] < n) { info.textContent = `持有的 ${name} 不足。`; return; }
-        counts[name] -= n;
-        essenceCount += n;
-        const selected = Array.from(zodiacItems).find(item => item.querySelector('.name').textContent === name);
-        if (selected) selected.querySelector('.note').textContent = `${counts[name]}個`;
-        const essenceEl = document.getElementById('essenceCount');
-        if (essenceEl) essenceEl.textContent = `${essenceCount}`;
-        pushHistory({ type: '分解', name: `${name} x${n} → 精華 x${n}`, time: new Date().toLocaleTimeString() });
-        info.textContent = `已分解 ${n} 個 ${name}，獲得 ${n} 個精華。`;
-        renderCounts(); renderHistory(); renderExchangeCounts(); renderSummaryCost();
-        saveState();
+      clearInputsBtn.addEventListener('click', () => {
+        container.querySelectorAll('.decompose-input').forEach(i => i.value = '0');
+        info.textContent = '已清除所有輸入。';
+      });
+
+      decomposeAllBtn.addEventListener('click', () => {
+        const inputs = Array.from(container.querySelectorAll('.decompose-input'));
+        const toDecompose = [];
+        const insufficient = [];
+        for (const inp of inputs){
+          const n = Math.max(0, parseInt(inp.value,10) || 0);
+          const name = inp.dataset.name;
+          if (n <= 0) continue;
+          const have = counts[name] || 0;
+          if (have < n){
+            insufficient.push({ name, need: n, have });
+          } else {
+            toDecompose.push({ name, n });
+          }
+        }
+        if (insufficient.length > 0){
+          // 顯示所有不足的項目（每項換行）
+          info.textContent = insufficient.map(x => `持有的 ${x.name} 不足（需要 ${x.need}，目前 ${x.have}）。`).join('\n');
+          return;
+        }
+        if (toDecompose.length === 0){ info.textContent = '請至少輸入一個要分解的數量。'; return; }
+
+        // 執行分解
+        let totalGained = 0;
+        const summary = [];
+        for (const item of toDecompose){
+          counts[item.name] -= item.n;
+          essenceCount += item.n;
+          totalGained += item.n;
+          summary.push(`${item.name} x${item.n}`);
+          // 更新對應的 have element
+          const haveEl = container.querySelector(`.decompose-have[data-name="${item.name}"]`);
+          if (haveEl) haveEl.textContent = `${counts[item.name]}個`;
+        }
+
+        // 更新全域 DOM
+        const essenceEl = document.getElementById('essenceCount'); if (essenceEl) essenceEl.textContent = `${essenceCount}`;
+        pushHistory({ type: '分解', name: `分解：${summary.join('、')} → 精華 x${totalGained}`, time: new Date().toLocaleTimeString() });
+        info.textContent = `已分解：${summary.join('、')}，共獲得 ${totalGained} 個精華。`;
+        container.querySelectorAll('.decompose-input').forEach(i => i.value = '0');
+        renderCounts(); renderHistory(); renderExchangeCounts(); renderSummaryCost(); saveState();
       });
     })();
 
-    // --- 精華兌換邏輯 ---
-    function essenceExchange(cost, options){
+    // --- 精華兌換（使用 modal 視覺化選擇） ---
+    let _currentEssenceCost = 0;
+    let _currentEssenceOptions = [];
+
+    function openEssenceModal(cost, options){
+      _currentEssenceCost = cost;
+      _currentEssenceOptions = options;
+      const modal = document.getElementById('essenceModal');
+      const desc = document.getElementById('essenceModalDesc');
+      const opts = document.getElementById('essenceModalOptions');
+      desc.textContent = `消耗 ${cost} 精華，可兌換：`;
+      opts.innerHTML = '';
+      options.forEach((o,i) => {
+        const d = document.createElement('div');
+        d.className = 'modal-option';
+        d.textContent = o;
+        d.dataset.idx = i;
+        d.addEventListener('click', () => {
+          opts.querySelectorAll('.modal-option').forEach(x => x.classList.remove('selected'));
+          d.classList.add('selected');
+        });
+        opts.appendChild(d);
+      });
+      modal.hidden = false;
+    }
+
+    function performEssenceExchange(cost, choice){
       if (essenceCount < cost) { exchangeResultEl.textContent = `精華不足：需要 ${cost}，目前 ${essenceCount}`; return; }
-      const choices = options.map((o,i) => `${i+1}. ${o}`).join('\n');
-      const ans = prompt(`消耗 ${cost} 精華，可兌換：\n${choices}\n輸入序號 (1-${options.length})`, '1');
-      if (ans === null) return;
-      const idx = parseInt(ans,10) - 1;
-      if (!options[idx]) { exchangeResultEl.textContent = '無效選擇。'; return; }
       essenceCount -= cost;
-      counts[options[idx]] = (counts[options[idx]] || 0) + 1;
-      const selected = Array.from(zodiacItems).find(item => item.querySelector('.name').textContent === options[idx]);
-      if (selected) selected.querySelector('.note').textContent = `${counts[options[idx]]}個`;
-      pushHistory({ type: '精華兌換', name: `${options[idx]}（消耗 ${cost} 精華）`, time: new Date().toLocaleTimeString() });
+      counts[choice] = (counts[choice] || 0) + 1;
+      const selected = Array.from(zodiacItems).find(item => item.querySelector('.name').textContent === choice);
+      if (selected) selected.querySelector('.note').textContent = `${counts[choice]}個`;
+      pushHistory({ type: '精華兌換', name: `${choice}（消耗 ${cost} 精華）`, time: new Date().toLocaleTimeString() });
       const essenceEl = document.getElementById('essenceCount'); if (essenceEl) essenceEl.textContent = `${essenceCount}`;
-      exchangeResultEl.innerHTML = `<strong>兌換成功</strong>：獲得 ${options[idx]}（消耗 ${cost} 精華）`;
+      exchangeResultEl.innerHTML = `<strong>兌換成功</strong>：獲得 ${choice}（消耗 ${cost} 精華）`;
       renderCounts(); renderHistory(); renderExchangeCounts(); renderSummaryCost(); saveState();
     }
 
-    // Bind essence exchange buttons
+    // modal controls
+    const modalCancelBtn = document.getElementById('essenceModalCancel');
+    const modalConfirmBtn = document.getElementById('essenceModalConfirm');
+    const modalOptionsEl = document.getElementById('essenceModalOptions');
+    if (modalCancelBtn) modalCancelBtn.addEventListener('click', () => { document.getElementById('essenceModal').hidden = true; });
+    if (modalConfirmBtn) modalConfirmBtn.addEventListener('click', () => {
+      const sel = modalOptionsEl.querySelector('.modal-option.selected');
+      if (!sel) { exchangeResultEl.textContent = '請先選擇要兌換的生肖。'; return; }
+      const idx = parseInt(sel.dataset.idx,10);
+      const choice = _currentEssenceOptions[idx];
+      document.getElementById('essenceModal').hidden = true;
+      performEssenceExchange(_currentEssenceCost, choice);
+    });
+
+    // Bind essence exchange buttons (open modal)
     const e10 = document.getElementById('essence10');
     const e50 = document.getElementById('essence50');
     const e200 = document.getElementById('essence200');
     const e1500 = document.getElementById('essence1500');
-    if (e10) e10.addEventListener('click', withTemporaryDisable(()=> essenceExchange(10, ['兔','龍','蛇']), 300));
-    if (e50) e50.addEventListener('click', withTemporaryDisable(()=> essenceExchange(50, ['鼠','牛','虎']), 300));
-    if (e200) e200.addEventListener('click', withTemporaryDisable(()=> essenceExchange(200, ['雞','兔','豬']), 500));
-    if (e1500) e1500.addEventListener('click', withTemporaryDisable(()=> essenceExchange(1500, ['馬','羊','猴']), 800));
+    if (e10) e10.addEventListener('click', withTemporaryDisable(()=> openEssenceModal(10, ['兔','龍','蛇']), 300));
+    if (e50) e50.addEventListener('click', withTemporaryDisable(()=> openEssenceModal(50, ['鼠','牛','虎']), 300));
+    if (e200) e200.addEventListener('click', withTemporaryDisable(()=> openEssenceModal(200, ['雞','狗','豬']), 500));
+    if (e1500) e1500.addEventListener('click', withTemporaryDisable(()=> openEssenceModal(1500, ['馬','羊','猴']), 800));
 
     // Redeem button (示意)
     document.getElementById('redeemBtn').addEventListener('click', () => {
       subtitle.textContent = '兌換功能請至「兌換」頁籤操作';
     });
 
-    // Clear history
+    // Clear history with confirmation
     clearHistoryBtn.addEventListener('click', () => {
+      const ok = confirm('確定要清除所有紀錄與數量嗎？此動作無法還原。');
+      if (!ok) return;
       history.length = 0;
       for (const k of Object.keys(counts)) counts[k] = 0;
       for (const r of Object.keys(rewardsCounts)) rewardsCounts[r] = 0;
@@ -856,6 +1005,7 @@
       renderHistory();
       renderSummaryCost();
       renderExchangeCounts();
+      updateDecomposeHave();
     });
 
     // Exchange logic
