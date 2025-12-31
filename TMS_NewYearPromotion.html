@@ -248,6 +248,11 @@
             <div class="amount" id="totalCost">0元</div>
           </div>
 
+          <div class="cost-box" aria-live="polite" aria-atomic="true">
+            <div class="label">氣息的精華</div>
+            <div class="amount" id="essenceCount">0</div>
+          </div>
+
           <div class="btn-group" role="group" aria-label="抽取按鈕">
             <button class="cta" id="newYearBtn">🎋 新年的氣息</button>
             <button class="cta" id="newYearBtn10">🎋 新年的氣息*10</button>
@@ -373,6 +378,24 @@
               <button class="cta" data-require="3" data-box="small" id="exchangeSmall">兌換小吉箱</button>
             </div>
           </div>
+
+          <!-- 精華兌換（可消耗精華兌換指定生肖） -->
+          <div class="box" id="box-essence">
+            <h3>精華兌換</h3>
+            <p>使用氣息的精華直接兌換指定生肖（請選擇對應消耗與目標）</p>
+            <div class="rewards">
+              <div class="reward">消耗 10 精華 → 可選：兔、龍、蛇</div>
+              <div class="reward">消耗 50 精華 → 可選：鼠、牛、虎</div>
+              <div class="reward">消耗 200 精華 → 可選：雞、兔、豬</div>
+              <div class="reward">消耗 1500 精華 → 可選：馬、羊、猴</div>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="cta" id="essence10" data-cost="10">消耗10精華</button>
+              <button class="cta" id="essence50" data-cost="50">消耗50精華</button>
+              <button class="cta" id="essence200" data-cost="200">消耗200精華</button>
+              <button class="cta" id="essence1500" data-cost="1500">消耗1500精華</button>
+            </div>
+          </div>
         </div>
 
         <div class="exchange-result" id="exchangeResult" aria-live="polite">
@@ -482,11 +505,12 @@
     const history = []; // 每次抽取或兌換的紀錄（物件）
     const counts = {};  // 各生肖數量
     const rewardsCounts = {}; // 各獎品獲得數量
+    let essenceCount = 0; // 氣息的精華
 
     // Persistence: save/load to localStorage
     function saveState(){
       try{
-        const state = { totalCost, history, counts, rewardsCounts };
+        const state = { totalCost, history, counts, rewardsCounts, essenceCount };
         localStorage.setItem('tms_newyear_state', JSON.stringify(state));
       }catch(e){ console.error('saveState error', e); }
     }
@@ -498,6 +522,7 @@
         const s = JSON.parse(raw);
         if (!s || typeof s !== 'object') return;
         if (typeof s.totalCost === 'number') totalCost = s.totalCost;
+        if (typeof s.essenceCount === 'number') essenceCount = s.essenceCount;
         if (Array.isArray(s.history)){
           history.length = 0;
           s.history.slice(0,500).forEach(h => history.push(h));
@@ -526,6 +551,9 @@
       if (selected) selected.querySelector('.note').textContent = `${counts[name]}個`;
     });
     totalCostEl.textContent = formatCurrency(totalCost);
+    // 顯示精華
+    const essenceCountEl = document.getElementById('essenceCount');
+    if (essenceCountEl) essenceCountEl.textContent = `${essenceCount}`;
 
     // Box definitions and rewards
     const boxDefinitions = {
@@ -706,6 +734,108 @@
     btn.addEventListener('click', withTemporaryDisable(singleDraw, 50));
     btn10.addEventListener('click', withTemporaryDisable(tenDraw, 50));
     btn100.addEventListener('click', withTemporaryDisable(hundredDraw, 50));
+
+    // --- 分解功能：在紀錄頁面分解生肖獲得精華 ---
+    (function createDecomposeControls(){
+      const parent = document.getElementById('exchangeCountsPanel');
+      if (!parent) return;
+      const container = document.createElement('div');
+      container.style.marginTop = '10px';
+      container.style.paddingTop = '8px';
+      container.style.borderTop = '1px solid rgba(255,255,255,0.03)';
+
+      const title = document.createElement('div');
+      title.style.fontWeight = '700';
+      title.textContent = '分解物品以獲得氣息的精華';
+      container.appendChild(title);
+
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.gap = '8px';
+      row.style.marginTop = '8px';
+
+      const select = document.createElement('select');
+      select.id = 'decomposeSelect';
+      Array.from(zodiacItems).forEach(item => {
+        const name = item.querySelector('.name').textContent;
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+
+      const qty = document.createElement('input');
+      qty.type = 'number';
+      qty.min = '1';
+      qty.value = '1';
+      qty.id = 'decomposeQty';
+      qty.style.width = '72px';
+      qty.style.padding = '6px';
+      qty.style.borderRadius = '8px';
+
+      const btn = document.createElement('button');
+      btn.className = 'cta';
+      btn.id = 'decomposeBtn';
+      btn.textContent = '分解';
+
+      row.appendChild(select);
+      row.appendChild(qty);
+      row.appendChild(btn);
+      container.appendChild(row);
+
+      const info = document.createElement('div');
+      info.id = 'decomposeInfo';
+      info.style.marginTop = '8px';
+      info.style.color = 'var(--muted)';
+      container.appendChild(info);
+
+      parent.appendChild(container);
+
+      btn.addEventListener('click', () => {
+        const name = select.value;
+        const n = parseInt(qty.value, 10) || 0;
+        if (n <= 0) { info.textContent = '請輸入大於 0 的數量。'; return; }
+        if (!counts[name] || counts[name] < n) { info.textContent = `持有的 ${name} 不足。`; return; }
+        counts[name] -= n;
+        essenceCount += n;
+        const selected = Array.from(zodiacItems).find(item => item.querySelector('.name').textContent === name);
+        if (selected) selected.querySelector('.note').textContent = `${counts[name]}個`;
+        const essenceEl = document.getElementById('essenceCount');
+        if (essenceEl) essenceEl.textContent = `${essenceCount}`;
+        pushHistory({ type: '分解', name: `${name} x${n} → 精華 x${n}`, time: new Date().toLocaleTimeString() });
+        info.textContent = `已分解 ${n} 個 ${name}，獲得 ${n} 個精華。`;
+        renderCounts(); renderHistory(); renderExchangeCounts(); renderSummaryCost();
+        saveState();
+      });
+    })();
+
+    // --- 精華兌換邏輯 ---
+    function essenceExchange(cost, options){
+      if (essenceCount < cost) { exchangeResultEl.textContent = `精華不足：需要 ${cost}，目前 ${essenceCount}`; return; }
+      const choices = options.map((o,i) => `${i+1}. ${o}`).join('\n');
+      const ans = prompt(`消耗 ${cost} 精華，可兌換：\n${choices}\n輸入序號 (1-${options.length})`, '1');
+      if (ans === null) return;
+      const idx = parseInt(ans,10) - 1;
+      if (!options[idx]) { exchangeResultEl.textContent = '無效選擇。'; return; }
+      essenceCount -= cost;
+      counts[options[idx]] = (counts[options[idx]] || 0) + 1;
+      const selected = Array.from(zodiacItems).find(item => item.querySelector('.name').textContent === options[idx]);
+      if (selected) selected.querySelector('.note').textContent = `${counts[options[idx]]}個`;
+      pushHistory({ type: '精華兌換', name: `${options[idx]}（消耗 ${cost} 精華）`, time: new Date().toLocaleTimeString() });
+      const essenceEl = document.getElementById('essenceCount'); if (essenceEl) essenceEl.textContent = `${essenceCount}`;
+      exchangeResultEl.innerHTML = `<strong>兌換成功</strong>：獲得 ${options[idx]}（消耗 ${cost} 精華）`;
+      renderCounts(); renderHistory(); renderExchangeCounts(); renderSummaryCost(); saveState();
+    }
+
+    // Bind essence exchange buttons
+    const e10 = document.getElementById('essence10');
+    const e50 = document.getElementById('essence50');
+    const e200 = document.getElementById('essence200');
+    const e1500 = document.getElementById('essence1500');
+    if (e10) e10.addEventListener('click', withTemporaryDisable(()=> essenceExchange(10, ['兔','龍','蛇']), 300));
+    if (e50) e50.addEventListener('click', withTemporaryDisable(()=> essenceExchange(50, ['鼠','牛','虎']), 300));
+    if (e200) e200.addEventListener('click', withTemporaryDisable(()=> essenceExchange(200, ['雞','兔','豬']), 500));
+    if (e1500) e1500.addEventListener('click', withTemporaryDisable(()=> essenceExchange(1500, ['馬','羊','猴']), 800));
 
     // Redeem button (示意)
     document.getElementById('redeemBtn').addEventListener('click', () => {
