@@ -3,251 +3,175 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>新年十二生肖收集活動</title>
+  <title>新年的氣息模擬器</title>
   <style>
     :root{
-      --bg:#0f1020;
-      --card:#16182b;
-      --text:#ffffff;
-      --muted:#cbd5e1;
-      --accent:#ff3b3b;
-      --gold:#f5c452;
-      --border:#25304a;
+      --bg:#6a0f0f;
+      --card:#3b1111;
+      --text:#fff5e6;
+      --muted:#f2d8b5;
+      --accent:#ff4f4f;
+      --gold:#f6c84c;
+      --border:rgba(255,255,255,0.06);
+      --glass: rgba(255,255,255,0.03);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family:"Noto Sans TC","Segoe UI",system-ui,-apple-system, sans-serif;
-      background: radial-gradient(1000px 500px at 80% -10%, #1b1e33 0%, var(--bg) 45%, #0a0b17 100%);
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(255,200,120,0.06), transparent 10%), radial-gradient(circle at 90% 20%, rgba(255,220,120,0.04), transparent 10%), linear-gradient(180deg,#7a0b0b 0%, #450505 100%);
       color:var(--text);
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
     }
 
     .page {
-      max-width:1080px;
+      max-width:1400px;
       margin:28px auto;
-      padding:24px;
-    }
-
-    /* Tabs */
-    .tabs {
-      display:flex;
-      gap:12px;
-      align-items:center;
-      margin-bottom:18px;
-    }
-    .tab-btn {
-      background:transparent;
-      border:1px solid transparent;
-      color:var(--muted);
-      padding:10px 14px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:700;
-    }
-    .tab-btn[aria-selected="true"]{
-      color: #1b0a0a;
-      background: linear-gradient(90deg,#ff7a7a,#ffd06e);
-      box-shadow: 0 8px 20px rgba(255,120,120,0.12);
-      border-color: rgba(255,255,255,0.06);
-    }
-
-    /* Header area inside tab content */
-    .header {
-      display:grid;
-      grid-template-columns: 1fr auto;
-      gap:16px;
-      align-items:center;
-      margin-bottom:18px;
-    }
-    .title h1{
-      margin:0;
-      font-size:26px;
-      background: linear-gradient(90deg,#ff7a7a,#ffd06e);
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-    }
-    .subtitle{
-      margin-top:6px;
-      color:var(--muted);
-      font-size:14px;
-    }
-
-    .controls {
-      display:flex;
-      gap:12px;
-      align-items:center;
-    }
-
-    .cost-box{
-      background: linear-gradient(180deg,#2a1b1b,#1a0f0f);
-      border:1px solid rgba(255,255,255,0.04);
-      padding:10px 14px;
-      border-radius:12px;
-      min-width:150px;
-      text-align:left;
-    }
-    .cost-box .label{ font-size:12px; color:var(--muted); }
-    .cost-box .amount{ margin-top:6px; font-weight:800; font-size:16px; color:#ffd9a8; }
-
-    .btn-group{ display:flex; gap:10px; }
-
-    .cta{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      background:linear-gradient(90deg,#ff5d5d,#ff9f5a);
-      color:#1b0a0a;
-      font-weight:800;
-      border:none;
-      border-radius:999px;
-      padding:10px 16px;
-      cursor:pointer;
-      box-shadow:0 10px 24px rgba(255,95,95,0.18);
-    }
-    .cta:disabled{ opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none; }
-
-    /* 分解輸入風格，符合頁面按鈕/卡片風格 */
-    .decompose-input{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
-      border:1px solid var(--border);
-      color:var(--muted);
-      padding:6px 8px;
-      border-radius:8px;
-      text-align:center;
-      font-weight:700;
-    }
-    .decompose-have{ color:var(--muted); font-size:13px; }
-
-    /* Modal */
-    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); z-index:2000; }
-    .modal[hidden]{ display:none; }
-    .modal-content{ background:var(--card); border:1px solid var(--border); padding:18px; border-radius:12px; width:320px; max-width:90%; }
-    .modal-options{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
-    .modal-option{ padding:8px 10px; border-radius:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.02); cursor:pointer; color:var(--muted); }
-    .modal-option.selected{ background:linear-gradient(90deg,#ff7a7a,#ffd06e); color:#1b0a0a; font-weight:800; border-color:rgba(255,255,255,0.06); }
-    .modal-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
-
-    /* Card and grid */
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:18px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.28);
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap:14px;
-      margin-top:14px;
-    }
-    .zodiac{
-      background: linear-gradient(180deg,#1c2038,#151831);
-      border:1px solid #2a3355;
-      border-radius:14px;
-      padding:12px 8px;
-      text-align:center;
+      padding:36px 48px;
       position:relative;
     }
-    .chip{
-      position:absolute;
-      top:8px;
-      left:8px;
-      background: rgba(255,255,255,0.04);
-      color:var(--muted);
-      font-size:11px;
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,0.06);
+
+    /* Festival decorations */
+    .festival-decor{ display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:12px; }
+    .lantern{ font-size:28px; transform:translateY(0); animation:float 3.6s ease-in-out infinite; }
+    .badge-newyear{ background:linear-gradient(90deg,var(--gold), #ffb86b); color:#3b1200; font-weight:900; padding:6px 12px; border-radius:999px; box-shadow:0 6px 18px rgba(0,0,0,0.3); }
+    @keyframes float{ 0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)} }
+
+    /* Confetti dots (pure CSS lightweight effect) */
+    .confetti{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+    .confetti i{ position:absolute; width:8px; height:8px; border-radius:50%; opacity:0.95; animation:fall 4s linear infinite; }
+    @keyframes fall{ 0%{ transform:translateY(-10vh) rotate(0) }100%{ transform:translateY(110vh) rotate(360deg) } }
+
+    /* Tabs */
+    .tabs { display:flex; gap:12px; align-items:center; margin-bottom:18px; }
+    .tab-btn { background:transparent; border:1px solid transparent; color:var(--muted); padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:800; }
+    .tab-btn[aria-selected="true"]{ color:#3b1200; background: linear-gradient(90deg,var(--gold), #ffd88a); box-shadow: 0 8px 20px rgba(246,200,80,0.12); border-color:var(--border); }
+
+    .header { display:grid; grid-template-columns: 1fr auto; gap:16px; align-items:center; margin-bottom:10px; }
+    .title h1{ margin:0; font-size:28px; letter-spacing:1px; color:var(--gold); text-shadow:0 6px 18px rgba(0,0,0,0.45); }
+    .subtitle{ margin-top:6px; color:var(--muted); font-size:14px; }
+
+    .controls { display:flex; gap:12px; align-items:center; }
+    .cost-box{ background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); border:1px solid var(--border); padding:10px 14px; border-radius:12px; min-width:150px; text-align:left; }
+    .cost-box .label{ font-size:12px; color:var(--muted); }
+    .cost-box .amount{ margin-top:6px; font-weight:900; font-size:16px; color:var(--gold); }
+
+    .btn-group{ display:flex; gap:10px; }
+    .cta{ display:inline-flex; align-items:center; gap:8px; background:linear-gradient(90deg,#ff6b6b,#ffb86b); color:#3b1200; font-weight:900; border:none; border-radius:999px; padding:10px 16px; cursor:pointer; box-shadow:0 10px 24px rgba(0,0,0,0.28); }
+    .cta:disabled{ opacity:0.6; cursor:not-allowed; }
+
+    .decompose-input{ background: transparent; border:1px solid var(--border); color:var(--muted); padding:6px 8px; border-radius:8px; text-align:center; font-weight:700; }
+    .decompose-have{ color:var(--muted); font-size:13px; }
+
+    .modal{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); z-index:2000; }
+    .modal[hidden]{ display:none; }
+    .modal-content{ background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); border:1px solid var(--border); padding:18px; border-radius:12px; width:340px; max-width:94%; }
+    .modal-option{ padding:8px 10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.02); cursor:pointer; color:var(--muted); }
+    .modal-option.selected{ background:linear-gradient(90deg,var(--gold), #ffd06e); color:#3b1200; font-weight:900; }
+
+    .card{ background: linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.08)); border:1px solid var(--border); border-radius:18px; padding:20px; box-shadow:0 16px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04); position:relative; overflow:hidden; }
+    .card{
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(246,200,80,0.06), transparent 15%),
+        radial-gradient(circle at 90% 80%, rgba(255,200,100,0.04), transparent 15%),
+        repeating-linear-gradient(135deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 4px),
+        repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0 2px, transparent 2px 8px);
+      backdrop-filter: blur(1px);
     }
+
+    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:18px; margin-top:18px; }
+    .zodiac{ background: linear-gradient(180deg,#7a1111,#5a0b0b); border:1px solid rgba(255,200,120,0.06); border-radius:14px; padding:12px 8px; text-align:center; position:relative; }
+    .chip{ position:absolute; top:8px; left:8px; background: rgba(0,0,0,0.12); color:var(--gold); font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.02); }
     .icon{ font-size:28px; margin:8px 0 6px; }
-    .name{ font-size:14px; font-weight:700; color:#e6ecff; }
+    .name{ font-size:14px; font-weight:900; color:var(--gold); }
     .note{ font-size:12px; color:var(--muted); margin-top:6px; }
 
-    /* Second tab content */
-    .record {
-      display:flex;
-      gap:18px;
-      margin-top:12px;
-      align-items:flex-start;
-    }
-    .counts {
-      min-width:260px;
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:12px;
-    }
-    .counts h3{ margin:0 0 8px 0; font-size:14px; color:#e6ecff; }
+    .record { display:flex; gap:18px; margin-top:12px; align-items:flex-start; }
+    .counts { min-width:260px; background:transparent; border:1px solid var(--border); border-radius:12px; padding:12px; }
+    .counts h3{ margin:0 0 8px 0; font-size:14px; color:var(--gold); }
     .counts-list{ display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:13px; color:var(--muted); }
 
-    /* 新增：目前兌換數量 panel */
-    .exchange-counts {
-      margin-top:12px;
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:12px;
-    }
-    .exchange-counts h3 { margin:0 0 8px 0; font-size:14px; color:#ffdca8; }
+    .exchange-counts { margin-top:12px; background:transparent; border:1px solid var(--border); border-radius:12px; padding:12px; }
+    .exchange-counts h3 { margin:0 0 8px 0; font-size:14px; color:var(--gold); }
     .exchange-counts-list { display:grid; grid-template-columns:1fr; gap:6px; font-size:13px; color:var(--muted); }
 
-    .history {
-      flex:1;
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:12px;
-      max-height:320px;
-      overflow:auto;
-    }
-    .history h3{ margin:0 0 8px 0; font-size:14px; color:#e6ecff; }
+    .history { flex:1; background:transparent; border:1px solid var(--border); border-radius:12px; padding:12px; max-height:320px; overflow:auto; }
+    .history h3{ margin:0 0 8px 0; font-size:14px; color:var(--gold); }
     .history-list{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
-    .history-item{ font-size:13px; color:var(--muted); padding:8px; border-radius:8px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02); }
+    .history-item{ font-size:13px; color:var(--muted); padding:8px; border-radius:8px; background:rgba(0,0,0,0.08); border:1px solid rgba(255,255,255,0.02); }
 
-    /* Exchange tab */
     .exchange-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap:14px; margin-top:12px; }
-    .box {
-      background: linear-gradient(180deg,#162033,#0f1524);
-      border:1px solid #24324f;
-      border-radius:12px;
-      padding:12px;
-    }
-    .box h3 { margin:0 0 8px 0; color:#ffdca8; }
+    .box { background: linear-gradient(180deg,#5a1313,#421010); border:1px solid rgba(255,200,120,0.04); border-radius:12px; padding:12px; }
+    .box h3 { margin:0 0 8px 0; color:var(--gold); }
     .box p { margin:0 0 10px 0; color:var(--muted); font-size:13px; }
-    .box .rewards { display:flex; gap:8px; flex-wrap:wrap; }
     .reward { background:rgba(255,255,255,0.02); padding:6px 8px; border-radius:8px; font-size:13px; color:var(--muted); border:1px solid rgba(255,255,255,0.02); }
 
-    .exchange-result {
-      margin-top:12px;
-      padding:12px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
-      border:1px solid var(--border);
-      border-radius:12px;
-      color:var(--muted);
-    }
+    .exchange-result { margin-top:12px; padding:12px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); border:1px solid var(--border); border-radius:12px; color:var(--muted); }
 
     footer{ margin-top:18px; color:var(--muted); font-size:13px; text-align:center; }
 
-    @media (max-width:900px){
-      .grid{ grid-template-columns: repeat(4,1fr); }
-      .header{ grid-template-columns:1fr; }
-      .controls{ justify-content:flex-start; }
-      .exchange-grid{ grid-template-columns: 1fr; }
+    @media (max-width:900px){ .grid{ grid-template-columns: repeat(4,1fr); } .header{ grid-template-columns:1fr; } .controls{ justify-content:flex-start; } .exchange-grid{ grid-template-columns: 1fr; } }
+    @media (min-width:1400px){
+      .page{ padding-left:80px; padding-right:80px; }
+      .card{ padding:28px; }
+      .grid{ gap:22px; }
     }
-    @media (max-width:560px){
-      .grid{ grid-template-columns: repeat(3,1fr); }
-      .record{ flex-direction:column; }
-      .counts{ width:100%; }
-    }
+    @media (max-width:560px){ .grid{ grid-template-columns: repeat(3,1fr); } .record{ flex-direction:column; } .counts{ width:100%; } }
+  </style>
+  <style>
+    /* Layout fix for large screens: center main area and keep footer at bottom */
+    .page{ min-height:100vh; display:flex; flex-direction:column; }
+    .page > footer{ margin-top:auto; }
+    .main{ display:flex; flex-direction:column; justify-content:center; gap:18px; }
+    @media (max-height:760px){ .main{ justify-content:flex-start; } }
+
+    /* Ornament SVG and card overlay */
+    .ornament{ position:absolute; inset:18px; width:calc(100% - 36px); height:calc(100% - 36px); pointer-events:none; opacity:0.16; }
+    .ornament .frame{ fill:none; stroke:var(--gold); stroke-width:2.4; stroke-linejoin:round; stroke-linecap:round; }
+    .card::before{ content:""; position:absolute; inset:0; background-image: radial-gradient(circle at 15% 15%, rgba(246,200,80,0.08), transparent 20%), radial-gradient(circle at 85% 85%, rgba(255,200,100,0.06), transparent 20%), radial-gradient(circle at 5% 80%, rgba(255,255,255,0.03), transparent 25%); pointer-events:none; mix-blend-mode:overlay; opacity:1; }
   </style>
 </head>
 <body>
   <div class="page" id="app">
+    <div class="festival-decor" aria-hidden="true">
+      <div class="lantern">🏮</div>
+      <div class="badge-newyear">恭賀新禧 · 2026</div>
+      <div class="lantern">🏮</div>
+    </div>
+    <div class="confetti" aria-hidden="true">
+      <i style="left:4%;background:#ffde6b;animation-delay:0s;"></i>
+      <i style="left:18%;background:#ff6b6b;animation-delay:0.4s;"></i>
+      <i style="left:32%;background:#ffd06e;animation-delay:0.8s;"></i>
+      <i style="left:46%;background:#ffb86b;animation-delay:1.2s;"></i>
+      <i style="left:60%;background:#ffd06e;animation-delay:1.6s;"></i>
+      <i style="left:74%;background:#ff6b6b;animation-delay:2s;"></i>
+      <i style="left:88%;background:#ffde6b;animation-delay:2.4s;"></i>
+    </div>
+
+<svg class="ornament" aria-hidden="true" viewBox="0 0 1400 900" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd06e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f6c84c;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ffb86b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 外框 -->
+  <rect class="frame" x="15" y="15" width="1370" height="870" rx="10" ry="10" 
+        stroke="url(#goldGrad)" stroke-width="3" fill="none" opacity="0.5" />
+
+  <!-- 角落裝飾線 -->
+  <g stroke="url(#goldGrad)" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M 15 100 L 15 15 L 100 15" />
+    <path d="M 1300 15 L 1385 15 L 1385 100" />
+    <path d="M 15 800 L 15 885 L 100 885" />
+    <path d="M 1300 885 L 1385 885 L 1385 800" />
+  </g>
+</svg>
+
+    <div class="main">
     <!-- Tabs -->
     <div class="tabs" role="tablist" aria-label="頁籤">
       <button class="tab-btn" role="tab" aria-selected="true" id="tab-activity">活動</button>
@@ -259,7 +183,7 @@
     <section id="panel-activity" role="tabpanel" aria-labelledby="tab-activity">
       <div class="header">
         <div class="title">
-          <h1>新年十二生肖收集活動</h1>
+          <h1>新年的氣息模擬器</h1>
           <p class="subtitle" id="subtitle">按下按鈕開始抽取生肖！</p>
         </div>
 
@@ -284,6 +208,7 @@
 
       <div class="card" aria-live="polite">
         <div class="grid" id="zodiacGrid" role="list" aria-label="十二生肖">
+          <div class="zodiac" role="listitem"><span class="chip">鼠</span><div class="icon">🐭</div><div class="name">鼠</div><div class="note">0個</div></div>
           <div class="zodiac" role="listitem"><span class="chip">牛</span><div class="icon">🐂</div><div class="name">牛</div><div class="note">0個</div></div>
           <div class="zodiac" role="listitem"><span class="chip">虎</span><div class="icon">🐯</div><div class="name">虎</div><div class="note">0個</div></div>
           <div class="zodiac" role="listitem"><span class="chip">兔</span><div class="icon">🐰</div><div class="name">兔</div><div class="note">0個</div></div>
@@ -295,7 +220,6 @@
           <div class="zodiac" role="listitem"><span class="chip">雞</span><div class="icon">🐔</div><div class="name">雞</div><div class="note">0個</div></div>
           <div class="zodiac" role="listitem"><span class="chip">狗</span><div class="icon">🐶</div><div class="name">狗</div><div class="note">0個</div></div>
           <div class="zodiac" role="listitem"><span class="chip">豬</span><div class="icon">🐷</div><div class="name">豬</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">鼠</span><div class="icon">🐭</div><div class="name">鼠</div><div class="note">0個</div></div>
         </div>
 
         <div style="margin-top:18px; display:flex; gap:12px; align-items:center;">
@@ -438,6 +362,7 @@
       </div>
     </div>
 
+    </div>
     <footer>祝你新年平安喜樂，心想事成！</footer>
   </div>
 
@@ -689,7 +614,7 @@
         const header = document.createElement('div');
         header.style.fontWeight = '700';
         header.style.marginTop = '6px';
-        header.textContent = `${boxKey === 'super' ? '超越' : boxKey === 'great' ? '大吉' : boxKey === 'medium' ? '中吉' : '小吉'} 等級箱子 獎品：`;
+        header.textContent = `${boxKey === '超越' ? 'super' : boxKey === '小吉' ? 'great' : boxKey === '中吉' ? 'medium' : '小吉'} 等級箱子 獎品：`;
         exchangeCountsListEl.appendChild(header);
         for (const r of box.rewards) {
           const row = document.createElement('div');
