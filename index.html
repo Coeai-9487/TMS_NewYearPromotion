@@ -80,8 +80,8 @@
       backdrop-filter: blur(1px);
     }
 
-    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:18px; margin-top:18px; }
-    .zodiac{ background: linear-gradient(180deg,#7a1111,#5a0b0b); border:1px solid rgba(255,200,120,0.06); border-radius:14px; padding:12px 8px; text-align:center; position:relative; }
+    .grid {display: grid;grid-template-columns: repeat(3, 1fr); gap: 12px;margin-top: 18px;width: 100%;box-sizing: border-box;}
+    .zodiac {background: linear-gradient(180deg,#7a1111,#5a0b0b);border: 1px solid rgba(255,200,120,0.06);border-radius: 14px;padding: 12px 8px;text-align: center;position: relative;box-sizing: border-box; }
     .chip{ position:absolute; top:8px; left:8px; background: rgba(0,0,0,0.12); color:var(--gold); font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,0.02); }
     .icon{ font-size:28px; margin:8px 0 6px; }
     .name{ font-size:14px; font-weight:900; color:var(--gold); }
@@ -206,21 +206,20 @@
         </div>
       </div>
 
-      <div class="card" aria-live="polite">
-        <div class="grid" id="zodiacGrid" role="list" aria-label="十二生肖">
-          <div class="zodiac" role="listitem"><span class="chip">鼠</span><div class="icon">🐭</div><div class="name">鼠</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">牛</span><div class="icon">🐂</div><div class="name">牛</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">虎</span><div class="icon">🐯</div><div class="name">虎</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">兔</span><div class="icon">🐰</div><div class="name">兔</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">龍</span><div class="icon">🐉</div><div class="name">龍</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">蛇</span><div class="icon">🐍</div><div class="name">蛇</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">馬</span><div class="icon">🐴</div><div class="name">馬</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">羊</span><div class="icon">🐐</div><div class="name">羊</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">猴</span><div class="icon">🐵</div><div class="name">猴</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">雞</span><div class="icon">🐔</div><div class="name">雞</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">狗</span><div class="icon">🐶</div><div class="name">狗</div><div class="note">0個</div></div>
-          <div class="zodiac" role="listitem"><span class="chip">豬</span><div class="icon">🐷</div><div class="name">豬</div><div class="note">0個</div></div>
-        </div>
+    <div class="grid" id="zodiacGrid" role="list" aria-label="十二生肖">
+      <div class="zodiac" role="listitem"><span class="chip">馬</span><div class="icon"><img src="chinese_zodiac_icon/7_horse.png" alt="馬"></div><div class="name">馬</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">羊</span><div class="icon"><img src="chinese_zodiac_icon/8_goat.png" alt="羊"></div><div class="name">羊</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">猴</span><div class="icon"><img src="chinese_zodiac_icon/9_monkey.png" alt="猴"></div><div class="name">猴</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">雞</span><div class="icon"><img src="chinese_zodiac_icon/10_rooster.png" alt="雞"></div><div class="name">雞</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">狗</span><div class="icon"><img src="chinese_zodiac_icon/11_dog.png" alt="狗"></div><div class="name">狗</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">豬</span><div class="icon"><img src="chinese_zodiac_icon/12_pig.png" alt="豬"></div><div class="name">豬</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">鼠</span><div class="icon"><img src="chinese_zodiac_icon/1_rat.png" alt="鼠"></div><div class="name">鼠</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">牛</span><div class="icon"><img src="chinese_zodiac_icon/2_ox.png" alt="牛"></div><div class="name">牛</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">虎</span><div class="icon"><img src="chinese_zodiac_icon/3_tiger.png" alt="虎"></div><div class="name">虎</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">兔</span><div class="icon"><img src="chinese_zodiac_icon/4_rabbit.png" alt="兔"></div><div class="name">兔</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">龍</span><div class="icon"><img src="chinese_zodiac_icon/5_dragon.png" alt="龍"></div><div class="name">龍</div><div class="note">0個</div></div>
+      <div class="zodiac" role="listitem"><span class="chip">蛇</span><div class="icon"><img src="chinese_zodiac_icon/6_snake.png" alt="蛇"></div><div class="name">蛇</div><div class="note">0個</div></div>
+    </div>
 
         <div style="margin-top:18px; display:flex; gap:12px; align-items:center;">
           <div style="flex:1; color:var(--muted); font-size:13px;">
